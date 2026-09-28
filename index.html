@@ -38,6 +38,43 @@
   <link rel="stylesheet" crossorigin href="./assets/index-C7qM5yWr.css">
 </head>
 <body>
+ <!-- Mobile Direct Engine Bridge -->
+<button id="gyro-permission" style="position:fixed; top:10px; left:10px; z-index:9999; padding:10px; background:#ff0000; color:#fff; border:none; cursor:pointer;">
+  Enable Engine Gyro
+</button>
+
+<script>
+  document.getElementById('gyro-permission').addEventListener('click', function() {
+    if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
+      DeviceOrientationEvent.requestPermission().then(state => {
+        if (state === 'granted') {
+          startNativeTracking();
+          this.style.display = 'none';
+        }
+      }).catch(console.error);
+    } else {
+      startNativeTracking();
+      this.style.display = 'none';
+    }
+  });
+
+  function startNativeTracking() {
+    window.addEventListener('deviceorientation', (event) => {
+      // Pulls physical left/right tilt (gamma) and front/back tilt (beta)
+      let tiltX = event.gamma || 0; 
+      let tiltY = event.beta || 0;
+
+      // Maps physical degrees (-90 to 90) to the engine's internal math scale (-2.5 to 2.5)
+      let engineX = (tiltX / 90) * 2.5;
+      let engineY = -(tiltY / 90) * 1.5;
+
+      // Bypasses the HTML canvas entirely and commands the 3D physics directly
+      if (typeof window.drive_saber_from_xy === 'function') {
+          window.drive_saber_from_xy(engineX, engineY);
+      }
+    });
+  }
+</script>
   <script defer src="pcb_draw.js"></script>
   <div class="main-container">
     <div class="header-container fullscreen">
